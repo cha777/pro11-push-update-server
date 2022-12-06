@@ -1,13 +1,20 @@
-const path = require('path');
 const express = require('express');
 const http = require('http');
 const fs = require('fs');
 
-const { Logger } = require('../logger');
+const logger = require('../logger').default;
+const { assetsDir } = require('./directories');
+
+const {
+  getVersionInfo,
+  getPrevReleasesInfo,
+  backupReleaseData,
+  updateVersionInfo,
+  updatePrevReleases,
+} = require('./utils');
 
 const app = express();
 const server = http.createServer(app);
-const logger = new Logger();
 
 const port = process.env.SERVER_PORT;
 
@@ -17,34 +24,6 @@ if (!port) {
   );
   process.exit(1);
 }
-
-const assetsDir = path.resolve('./assets');
-const versionInfoPath = path.resolve(assetsDir, 'versionInfo.json');
-const prevReleasesPath = path.resolve(assetsDir, 'prevReleases.json');
-
-logger.info('assetsDir', assetsDir);
-logger.info('versionInfoPath', versionInfoPath);
-logger.info('prevReleasesPath', prevReleasesPath);
-
-const _getVersionInfo = async () => {
-  try {
-    const data = await fs.promises.readFile(versionInfoPath);
-    return JSON.parse(data);
-  } catch (err) {
-    logger.error(`Error while reading version info file: ${err}`);
-    return {};
-  }
-};
-
-const _getPrevReleasesInfo = async () => {
-  try {
-    const data = await fs.promises.readFile(prevReleasesPath);
-    return JSON.parse(data);
-  } catch (err) {
-    logger.error(`Error while reading previous releases info file: ${err}`);
-    return { releases: {}, msgType: 2 };
-  }
-};
 
 server.listen(port, '0.0.0.0', () => {
   logger.info(`Express server listening on port ${port}`);
@@ -59,7 +38,7 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/latestVersion', async (_req, res) => {
-  const versionInfo = await _getVersionInfo();
+  const versionInfo = await getVersionInfo();
   logger.info('versionInfo', versionInfo);
 
   if (versionInfo && versionInfo.app && versionInfo.installer) {
@@ -72,7 +51,7 @@ app.get('/latestVersion', async (_req, res) => {
 });
 
 app.get('/prevReleases', async (_req, res) => {
-  const prevReleasesInfo = await _getPrevReleasesInfo();
+  const prevReleasesInfo = await getPrevReleasesInfo();
 
   if (prevReleasesInfo) {
     res.json(prevReleasesInfo);
@@ -80,5 +59,34 @@ app.get('/prevReleases', async (_req, res) => {
     const msg = 'Previous release notes not found';
     logger.warn(msg);
     res.status(404).send(msg);
+  }
+});
+
+app.post('/createRelease', async (req, res) => {
+  let backupDir;
+
+  try {
+    const { version, installer, versionName, releaseNote } = req.body;
+    logger.info('new version data', req.body);
+
+    logger.info(`Deploying version ${version}`);
+
+    backupDir = await backupReleaseData();
+
+    await Promise.all([
+      await updateVersionInfo(version, installer),
+      await updatePrevReleases(version, versionName, releaseNote),
+    ]);
+
+    logger.info(`Successfully deployed version: ${version}`);
+    res.status(200).send(`Successfully deployed version ${version}`);
+  } catch (err) {
+    logger.error(`Error while creating release: ${err}`);
+    res.status(500).send(`Error while deploying version`);
+  } finally {
+    if (fs.existsSync(backupDir)) {
+      fs.rm(backupDir, { recursive: true, force: true });
+      logger.info('Backup folder removed');
+    }
   }
 });
