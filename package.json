@@ -1,0 +1,34 @@
+{
+  "name": "pro11-push-update-server",
+  "version": "1.0.0",
+  "description": "Pro11 push update service",
+  "main": "src/index.js",
+  "author": "cha777 (chathuranga_wm@yahoo.com)",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node .",
+    "bundle": "pkg package.json"
+  },
+  "dependencies": {
+    "date-fns": "^2.29.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "winston-logrotate": "^1.3.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.0"
+  },
+  "bin": "src/index.js",
+  "pkg": {
+    "scripts": "src/**/*.js",
+    "targets": [
+      "node16-macos-x64",
+      "node16-linux-x64"
+    ],
+    "outputPath": "dist"
+  },
+  "engines": {
+    "node": "16.x"
+  }
+}
