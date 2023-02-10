@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const multer = require('multer');
 const AdmZip = require('adm-zip');
 const { format } = require('date-fns');
 
@@ -27,11 +26,6 @@ module.exports = (function () {
       return { releases: {}, msgType: 2 };
     }
   };
-
-  // const serverUploadMiddleWear = () => {
-
-  //   return upload;
-  // };
 
   const deployNewRelease = async (file, versionName) => {
     return new Promise(async (resolve, reject) => {
@@ -232,7 +226,6 @@ module.exports = (function () {
   return {
     getVersionInfo,
     getPrevReleasesInfo,
-    // serverUploadMiddleWear,
     deployNewRelease,
   };
 })();

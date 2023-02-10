@@ -40,6 +40,12 @@ const upload = multer({
       }
 
       const { versionName } = req.body;
+
+      if (!versionName) {
+        cb(new Error('Version name unavailable'));
+        return;
+      }
+
       const versionNumber = versionName.split('_').pop().split('-').shift().replaceAll('.', '');
       const releaseFileName = file.originalname.split('.').shift().split('_').shift();
 
