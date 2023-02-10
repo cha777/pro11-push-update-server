@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 
 const logger = require('../logger').default;
@@ -25,9 +24,17 @@ module.exports = (function () {
     return prevReleasesFile;
   })();
 
+  const serverUploadsDir = (function () {
+    const uploadsDir = path.resolve('./uploads');
+    logger.info('serverUploadsDir', uploadsDir);
+
+    return uploadsDir;
+  })();
+
   return {
     assetsDir,
     versionInfoFile,
     prevReleasesFile,
+    serverUploadsDir,
   };
 })();
