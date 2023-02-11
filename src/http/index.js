@@ -3,9 +3,10 @@ const cookieParser = require('cookie-parser');
 const axios = require('axios');
 const multer = require('multer');
 const http = require('http');
+const path = require('path');
 
 const logger = require('../logger').default;
-const { assetsDir } = require('./directories');
+const { assetsDir, clientDir } = require('./directories');
 
 const { getVersionInfo, getPrevReleasesInfo, deployNewRelease } = require('./utils');
 
@@ -25,6 +26,7 @@ server.listen(port, '0.0.0.0', () => {
 
 /* Using public as asset folder */
 app.use(express.static(assetsDir));
+app.use(express.static(clientDir));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -90,6 +92,10 @@ app.get('/prevReleases', async (_req, res) => {
   }
 });
 
+app.get('/release-uploader', async (req, res) => {
+  return res.sendFile(path.resolve(clientDir, 'index.html'));
+});
+
 app.post('/createRelease', upload.single('release'), async (req, res) => {
   try {
     const file = req.file;
@@ -132,7 +138,7 @@ app.post('/auth', async (req, res) => {
     }
   } catch (e) {
     logger.error('Error while handling auth request', e.message);
-    res.status(500).send();
+    res.status(500).send({ error: 'Authentication failed' });
   }
 });
 

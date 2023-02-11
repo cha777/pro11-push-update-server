@@ -31,10 +31,18 @@ module.exports = (function () {
     return uploadsDir;
   })();
 
+  const clientDir = (function () {
+    const clientDir = path.resolve('./client');
+    logger.info('clientDir', clientDir);
+
+    return clientDir;
+  })();
+
   return {
     assetsDir,
     versionInfoFile,
     prevReleasesFile,
     serverUploadsDir,
+    clientDir,
   };
 })();
