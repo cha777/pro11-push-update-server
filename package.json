@@ -7,13 +7,17 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "postinstall": "npm i --prefix client",
     "dev": "nodemon .",
-    "start": "node .",
+    "start:server": "node .",
+    "start:client": "npm run dev --prefix client",
+    "start": "npm-run-all start:server start:client",
+    "build:client": "rimraf ./assets/release-uploader && npm run build --prefix client && mv client/dist ./assets/release-uploader",
     "bundle": "pkg package.json"
   },
   "dependencies": {
     "adm-zip": "^0.5.10",
-    "axios": "^1.3.2",
+    "axios": "0.21.1",
     "cookie-parser": "^1.4.6",
     "date-fns": "^2.29.3",
     "dotenv": "^16.0.3",
@@ -23,7 +27,9 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.20",
-    "pkg": "^5.8.0"
+    "pkg": "^5.8.0",
+    "rimraf": "^4.4.0",
+    "yarn-run-all": "^3.1.1"
   },
   "bin": "src/index.js",
   "pkg": {
