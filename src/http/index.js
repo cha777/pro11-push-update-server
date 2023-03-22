@@ -96,26 +96,47 @@ app.get('/release-uploader', async (req, res) => {
   return res.sendFile(path.resolve(clientDir, 'index.html'));
 });
 
-app.post('/createRelease', upload.single('release'), async (req, res) => {
+app.post('/createRelease', async (req, res) => {
   try {
-    const file = req.file;
-    const { versionName } = req.body;
+    const jiraSessionKey = 'JSESSIONID';
+    const jiraSession = req.cookies[jiraSessionKey];
 
-    if (!file) {
-      res.status(500).send({ error: 'File not available' });
-      return;
+    if (jiraSession) {
+      const session = { name: jiraSessionKey, value: jiraSession };
+      const user = await verifyUser(session);
+
+      if (user) {
+        upload.single('release')(req, res, async (err) => {
+          if (err) {
+            res.status(400).send({ error: 'Bad Request' });
+            return;
+          }
+
+          const file = req.file;
+          const { versionName } = req.body;
+
+          if (!file) {
+            res.status(500).send({ error: 'File not available' });
+            return;
+          }
+
+          if (!versionName) {
+            res.status(500).send({ error: 'Version name not available' });
+            return;
+          }
+
+          await deployNewRelease(req.file, versionName);
+
+          logger.info(`Successfully deployed version: ${versionName}`);
+          res.status(200).send({ message: `Successfully deployed version ${versionName}` });
+        });
+      } else {
+        res.status(401).send({ error: 'Unauthorized' });
+      }
+    } else {
+      res.status(401).send({ error: 'Unauthorized' });
     }
-
-    if (!versionName) {
-      res.status(500).send({ error: 'Version name not available' });
-      return;
-    }
-
-    await deployNewRelease(req.file, versionName);
-
-    logger.info(`Successfully deployed version: ${versionName}`);
-    res.status(200).send({ message: `Successfully deployed version ${versionName}` });
-  } catch (err) {
+  } catch (e) {
     res.status(500).send({ error: 'Error while deploying version' });
   }
 });
