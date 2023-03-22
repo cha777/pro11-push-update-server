@@ -3,7 +3,6 @@ const cookieParser = require('cookie-parser');
 const axios = require('axios');
 const multer = require('multer');
 const http = require('http');
-const path = require('path');
 
 const logger = require('../logger').default;
 const { assetsDir, clientDir } = require('./directories');
@@ -90,10 +89,6 @@ app.get('/prevReleases', async (_req, res) => {
     logger.warn(msg);
     res.status(404).send(msg);
   }
-});
-
-app.get('/release-uploader', async (req, res) => {
-  return res.sendFile(path.resolve(clientDir, 'index.html'));
 });
 
 app.post('/createRelease', async (req, res) => {
