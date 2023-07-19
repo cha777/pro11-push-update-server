@@ -101,6 +101,7 @@ module.exports = (function () {
         resolve(backupDir);
       } catch (err) {
         if (fs.existsSync(backupDir)) {
+          logger.info('Removing backup directory');
           fs.rmdirSync(backupDir, { recursive: true, force: true });
         }
 

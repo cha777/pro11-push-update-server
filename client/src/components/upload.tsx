@@ -42,6 +42,10 @@ const Uploader = () => {
       formData.append('versionName', versionName);
       formData.append('release', release);
 
+      const baseUrlPaths = window.location.href.split('/');
+      baseUrlPaths.pop();
+      const baseUrl = baseUrlPaths.join('/');
+
       setError('');
       setIsUploading(true);
       setUploadProgress(0);
@@ -49,6 +53,7 @@ const Uploader = () => {
       const response = await axios({
         method: 'post',
         url: '/createRelease',
+        baseURL: baseUrl,
         data: formData,
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'json',

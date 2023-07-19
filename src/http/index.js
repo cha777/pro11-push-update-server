@@ -3,6 +3,8 @@ const cookieParser = require('cookie-parser');
 const axios = require('axios');
 const multer = require('multer');
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 
 const logger = require('../logger').default;
 const { assetsDir, clientDir } = require('./directories');
@@ -25,7 +27,6 @@ server.listen(port, '0.0.0.0', () => {
 
 /* Using public as asset folder */
 app.use(express.static(assetsDir));
-app.use(express.static(clientDir));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -66,6 +67,28 @@ app.get('/', (_req, res) => {
   res.status(200).send('File server is working');
 });
 
+app.use('/release-uploader', async (req, res, next) => {
+  if (req.originalUrl.endsWith('index.html') || req.originalUrl.endsWith('/release-uploader/')) {
+    try {
+      const indexFilePath = path.resolve(clientDir, 'index.html');
+
+      if (fs.existsSync(indexFilePath)) {
+        let content = await fs.promises.readFile(path.resolve(clientDir, 'index.html'), { encoding: 'utf-8' });
+        content = content.replaceAll('/[BASE_PATH]', process.env.BASE_PATH);
+
+        res.send(content);
+      } else {
+        logger.warn(`release uploader file not available at ${indexFilePath}`);
+        res.status(404);
+      }
+    } catch (e) {
+      res.status(501);
+    }
+  } else {
+    next();
+  }
+});
+
 app.get('/latestVersion', async (_req, res) => {
   const versionInfo = await getVersionInfo();
   logger.info('versionInfo', versionInfo);
@@ -91,7 +114,7 @@ app.get('/prevReleases', async (_req, res) => {
   }
 });
 
-app.post('/createRelease', async (req, res) => {
+app.post('/release-uploader/createRelease', async (req, res) => {
   try {
     const jiraSessionKey = 'JSESSIONID';
     const jiraSession = req.cookies[jiraSessionKey];
@@ -136,7 +159,7 @@ app.post('/createRelease', async (req, res) => {
   }
 });
 
-app.post('/auth', async (req, res) => {
+app.post('/release-uploader/auth', async (req, res) => {
   const { username, password } = req.body;
 
   try {
@@ -158,7 +181,7 @@ app.post('/auth', async (req, res) => {
   }
 });
 
-app.get('/me', async (req, res) => {
+app.get('/release-uploader/me', async (req, res) => {
   try {
     const jiraSessionKey = 'JSESSIONID';
     const jiraSession = req.cookies[jiraSessionKey];
@@ -177,6 +200,8 @@ app.get('/me', async (req, res) => {
     res.status(500).send();
   }
 });
+
+app.use('/release-uploader', express.static(clientDir));
 
 const loginUser = async (username, password) => {
   return (

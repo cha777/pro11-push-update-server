@@ -32,7 +32,7 @@ module.exports = (function () {
   })();
 
   const clientDir = (function () {
-    const clientDir = path.resolve(assetsDir, 'release-uploader');
+    const clientDir = path.resolve(process.env.HOME, 'release-uploader');
     logger.info('clientDir', clientDir);
 
     return clientDir;

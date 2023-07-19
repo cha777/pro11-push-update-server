@@ -4,6 +4,10 @@ interface UploadNotificationProps extends ModalProps {
   isSuccess: boolean;
 }
 
+const baseUrlPaths = window.location.href.split('/');
+baseUrlPaths.pop();
+const baseUrl = baseUrlPaths.join('/');
+
 const UploadNotification = ({ isSuccess, message, onHide, ...props }: UploadNotificationProps) => {
   return (
     <Modal
@@ -23,7 +27,7 @@ const UploadNotification = ({ isSuccess, message, onHide, ...props }: UploadNoti
           <img
             style={{ width: '100px' }}
             className='h-auto mt-0 mx-auto mb-3'
-            src={isSuccess ? '/success.png' : '/error.png'}
+            src={baseUrl + (isSuccess ? '/success.png' : '/error.png')}
             alt=''
           />
           <h2 className='mb-5'>{`Upload ${isSuccess ? 'Successful' : 'Failed'}`}</h2>

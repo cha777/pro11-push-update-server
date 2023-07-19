@@ -92,12 +92,16 @@ interface AuthProviderProps {
 export const AuthProvider: FC<AuthProviderProps> = (props) => {
   const { children } = props;
   const [state, dispatch] = useReducer(reducer, initialState);
+  const baseUrlPaths = window.location.href.split('/');
+  baseUrlPaths.pop();
+  const baseUrl = baseUrlPaths.join('/');
 
   const initialize = useCallback(async (): Promise<void> => {
     try {
       const user = (
         await axios({
           url: '/me',
+          baseURL: baseUrl,
           method: 'get',
           responseType: 'json',
           withCredentials: true,
@@ -125,7 +129,6 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
         },
       });
     } catch (err) {
-      console.error(err);
       dispatch({
         type: ActionType.INITIALIZE,
         payload: {
@@ -149,6 +152,7 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
       const user = (
         await axios({
           url: '/auth',
+          baseURL: baseUrl,
           method: 'post',
           responseType: 'json',
           withCredentials: true,

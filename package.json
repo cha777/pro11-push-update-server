@@ -12,8 +12,9 @@
     "start:server": "node .",
     "start:client": "npm run dev --prefix client",
     "start": "npm-run-all start:server start:client",
-    "build:client": "rimraf ./assets/release-uploader && npm run build --prefix client && mv client/dist ./assets/release-uploader",
-    "bundle": "pkg package.json"
+    "build:client": "rimraf ./dist/release-uploader && npm run build --prefix client && mv client/dist ./dist/release-uploader",
+    "build:server": "pkg package.json",
+    "build": "npm-run-all build:client build:server"
   },
   "dependencies": {
     "adm-zip": "^0.5.10",
