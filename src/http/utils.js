@@ -135,7 +135,7 @@ module.exports = (function () {
   const _updatePrevReleases = async (version, versionName, releaseNote) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const prevReleases = await getPrevReleasesInfo();
+        const prevReleases = { releases: {}, msgType: 2, ...(await getPrevReleasesInfo()) };
 
         const newReleaseInfo = Object.assign(releaseNote, {
           version,
@@ -146,7 +146,7 @@ module.exports = (function () {
         const isNewVersionValid = _validateVersionInfo(releaseNote, newReleaseInfo);
 
         if (isNewVersionValid) {
-          prevReleases[version] = newReleaseInfo;
+          prevReleases.releases[version] = newReleaseInfo;
 
           await fs.promises.writeFile(prevReleasesFile, JSON.stringify(prevReleases, null, 2));
           resolve();
