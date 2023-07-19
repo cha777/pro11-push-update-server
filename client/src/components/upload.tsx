@@ -24,7 +24,7 @@ const Uploader = () => {
       return;
     }
 
-    if (!release || release.type !== 'application/zip') {
+    if (!release || (release.type !== 'application/zip' && release.type !== 'application/x-zip-compressed')) {
       setError('Invalid selection for release file. Please select a proper zip file');
       return;
     }

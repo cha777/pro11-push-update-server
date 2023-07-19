@@ -36,7 +36,7 @@ const upload = multer({
   limits: { files: 1, fields: 1, fileSize: 60 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     try {
-      if (file.mimetype !== 'application/zip') {
+      if (file.mimetype !== 'application/zip' && file.mimetype !== 'application/x-zip-compressed') {
         cb(new Error('Invalid file type'));
         return;
       }
