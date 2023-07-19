@@ -25,8 +25,6 @@ server.listen(port, '0.0.0.0', () => {
   logger.info(`Express server listening on port ${port}`);
 });
 
-/* Using public as asset folder */
-app.use(express.static(assetsDir));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -201,6 +199,8 @@ app.get('/release-uploader/me', async (req, res) => {
   }
 });
 
+/* Using public as asset folder */
+app.use(express.static(assetsDir));
 app.use('/release-uploader', express.static(clientDir));
 
 const loginUser = async (username, password) => {
