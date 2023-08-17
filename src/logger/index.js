@@ -10,6 +10,10 @@ class Logger {
     this._createLogger();
   }
 
+  debug(...message) {
+    this.logger.debug(...message);
+  }
+
   info(...message) {
     this.logger.info(...message);
   }

@@ -7,6 +7,10 @@ const logger = require('../logger').default;
 const { versionInfoFile, prevReleasesFile, assetsDir, serverUploadsDir } = require('./directories');
 
 module.exports = (function () {
+  const allowedUsers = (() => {
+    return process.env.ALLOWED_USERS ? process.env.ALLOWED_USERS.split(',') : [];
+  })();
+
   const getVersionInfo = async () => {
     try {
       const data = await fs.promises.readFile(versionInfoFile);
@@ -225,6 +229,7 @@ module.exports = (function () {
   };
 
   return {
+    allowedUsers,
     getVersionInfo,
     getPrevReleasesInfo,
     deployNewRelease,
