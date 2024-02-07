@@ -9,7 +9,7 @@ const fs = require('fs');
 const logger = require('../logger').default;
 const { assetsDir, clientDir } = require('./directories');
 
-const { getVersionInfo, getPrevReleasesInfo, deployNewRelease } = require('./utils');
+const { allowedUsers, getVersionInfo, getPrevReleasesInfo, deployNewRelease } = require('./utils');
 
 const app = express();
 const server = http.createServer(app);
@@ -88,27 +88,37 @@ app.use('/release-uploader', async (req, res, next) => {
 });
 
 app.get('/latestVersion', async (_req, res) => {
-  const versionInfo = await getVersionInfo();
-  logger.info('versionInfo', versionInfo);
+  try {
+    const versionInfo = await getVersionInfo();
+    logger.debug('versionInfo', versionInfo);
 
-  if (versionInfo && versionInfo.app && versionInfo.installer) {
-    res.json(versionInfo);
-  } else {
-    const msg = 'Build not found';
-    logger.warn(msg);
-    res.status(404).send(msg);
+    if (versionInfo && versionInfo.app && versionInfo.installer) {
+      res.json(versionInfo);
+    } else {
+      const msg = 'Build not found';
+      logger.warn(msg);
+      res.status(404).send(msg);
+    }
+  } catch (e) {
+    logger.error(`Error while fetching latest version: ${e.message}`);
+    res.status(500);
   }
 });
 
 app.get('/prevReleases', async (_req, res) => {
-  const prevReleasesInfo = await getPrevReleasesInfo();
+  try {
+    const prevReleasesInfo = await getPrevReleasesInfo();
 
-  if (prevReleasesInfo) {
-    res.json(prevReleasesInfo);
-  } else {
-    const msg = 'Previous release notes not found';
-    logger.warn(msg);
-    res.status(404).send(msg);
+    if (prevReleasesInfo) {
+      res.json(prevReleasesInfo);
+    } else {
+      const msg = 'Previous release notes not found';
+      logger.warn(msg);
+      res.status(404).send(msg);
+    }
+  } catch (e) {
+    logger.error(`Error while fetching prev releases version: ${e.message}`);
+    res.status(500);
   }
 });
 
@@ -122,6 +132,8 @@ app.post('/release-uploader/createRelease', async (req, res) => {
       const user = await verifyUser(session);
 
       if (user) {
+        logger.debug(`Release creation - ${user.name}`);
+
         upload.single('release')(req, res, async (err) => {
           if (err) {
             res.status(400).send({ error: 'Bad Request' });
@@ -237,6 +249,13 @@ const verifyUser = async (session) => {
     })
   ).data;
 
+  if (!allowedUsers.includes(user.name)) {
+    logger.warn(`User not allowed: ${user.email}`);
+    return;
+  }
+
+  logger.info(`User verified. username: ${user.name}, displayName: ${user.displayName}`);
+
   return {
     username: user.name,
     displayName: user.displayName,
@@ -245,6 +264,8 @@ const verifyUser = async (session) => {
 };
 
 const fetchProjectMeta = async (session) => {
+  logger.info(`Fetching projects for ${process.env.PROJECT_NAME}`);
+
   const { name: projectName, versions } = (
     await axios({
       url: `project/${process.env.PROJECT_NAME}`,
