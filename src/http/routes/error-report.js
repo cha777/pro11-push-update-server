@@ -5,7 +5,9 @@ const { errorReportsDir } = require('../directories');
 
 const logger = require('../../logger').default;
 
-let router = express.Router();
+const router = express.Router();
+
+const fileSize = process.env.REPORT_FILE_SIZE || 100 * 1024 * 1024; // 100mb
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -22,6 +24,21 @@ const upload = multer({
       }
     },
   }),
+  limits: { files: 1, fields: 1, fileSize },
+  fileFilter: (_req, file, callback) => {
+    try {
+      if (file.mimetype !== 'application/zip' && file.mimetype !== 'application/x-zip-compressed') {
+        logger.error(`Unacceptable file type: ${file.mimetype}`);
+        callback(new Error('Invalid file type'));
+        return;
+      }
+
+      callback(null, true);
+    } catch (err) {
+      logger.error(`Error while filtering upload file type: ${err.message}`);
+      callback(new Error('Cannot accept this file'));
+    }
+  },
 });
 
 router.post('/submit', (req, res) => {
@@ -41,7 +58,7 @@ router.post('/submit', (req, res) => {
         return;
       }
 
-      logger.info(`Successfully uploaded error report: ${file}`);
+      logger.info(`Successfully uploaded error report: ${file.filename}`);
       res.status(200).send(file);
     });
   } catch (err) {
