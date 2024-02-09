@@ -38,11 +38,19 @@ module.exports = (function () {
     return clientDir;
   })();
 
+  const errorReportsDir = (function () {
+    const errorReportsDir = path.resolve('./error-reports');
+    logger.info('errorReportsDir', errorReportsDir);
+
+    return errorReportsDir;
+  })();
+
   return {
     assetsDir,
     versionInfoFile,
     prevReleasesFile,
     serverUploadsDir,
     clientDir,
+    errorReportsDir,
   };
 })();
