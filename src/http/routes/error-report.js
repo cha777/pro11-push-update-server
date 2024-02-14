@@ -67,6 +67,26 @@ router.post('/submit', (req, res) => {
   }
 });
 
+router.get('/:fileName', (req, res) => {
+  try {
+    const fileName = req.params.fileName;
+
+    logger.info(`Sending ${fileName} error report`);
+
+    res.sendFile(fileName, { root: errorReportsDir }, (err) => {
+      if (err) {
+        logger.error(`Sending error report file ${fileName} failed ${err.message}`);
+        return;
+      }
+
+      logger.info(`Successfully sent error report file ${fileName}`);
+    });
+  } catch (err) {
+    logger.error(`Error sending error report file: ${err.message}`);
+    res.status(500).send({ error: 'Error downloading error report' });
+  }
+});
+
 router.get('/', (_req, res) => {
   res.status(200).send('Error report service is working');
 });
