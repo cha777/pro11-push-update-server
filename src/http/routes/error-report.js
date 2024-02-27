@@ -12,10 +12,15 @@ const fileSize = process.env.REPORT_FILE_SIZE || 100 * 1024 * 1024; // 100mb
 const upload = multer({
   storage: multer.diskStorage({
     destination: errorReportsDir,
-    filename: (_req, file, callback) => {
+    filename: (req, file, callback) => {
       try {
-        let ext = path.extname(file.originalname);
+        const { username } = req.body;
+        const ext = path.extname(file.originalname);
         let fileName = Date.now() + ext;
+
+        if (username) {
+          fileName = `${username}_${fileName}`;
+        }
 
         callback(null, fileName);
       } catch (err) {
