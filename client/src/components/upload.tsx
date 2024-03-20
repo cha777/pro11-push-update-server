@@ -4,6 +4,8 @@ import { Button, Card, Container, Form, FormGroup, ProgressBar } from 'react-boo
 import { useAuth } from '../hooks/use-auth';
 import UploadNotification from './upload-notification';
 
+const STORAGE_KEY = 'jira-token';
+
 const Uploader = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState('');
@@ -45,6 +47,7 @@ const Uploader = () => {
       const baseUrlPaths = window.location.href.split('/');
       baseUrlPaths.pop();
       const baseUrl = baseUrlPaths.join('/');
+      const authToken = sessionStorage.getItem(STORAGE_KEY);
 
       setError('');
       setIsUploading(true);
@@ -55,7 +58,10 @@ const Uploader = () => {
         url: '/createRelease',
         baseURL: baseUrl,
         data: formData,
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Basic ${authToken}`,
+        },
         responseType: 'json',
         onUploadProgress: ({ loaded, total }) => {
           setUploadProgress(total ? Math.round((100 * loaded) / total) : 0);
