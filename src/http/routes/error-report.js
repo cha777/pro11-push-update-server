@@ -1,5 +1,8 @@
 const express = require('express');
 const multer = require('multer');
+const { subMonths } = require('date-fns');
+const cron = require('node-cron');
+const fs = require('fs').promises;
 const path = require('path');
 const { errorReportsDir } = require('../directories');
 
@@ -9,13 +12,50 @@ const router = express.Router();
 
 const fileSize = process.env.REPORT_FILE_SIZE || 100 * 1024 * 1024; // 100mb
 
+const _cleanUpErrorReportData = async () => {
+  try {
+    logger.info('Running job to remove old error reports');
+
+    const files = await fs.readdir(errorReportsDir);
+    const oneMonthAgo = subMonths(new Date(), 1);
+
+    for (const file of files) {
+      const filePath = path.join(errorReportsDir, file);
+      const stats = await fs.stat(filePath);
+      const fileModifiedTime = stats.mtime;
+
+      if (fileModifiedTime <= oneMonthAgo) {
+        await fs.unlink(filePath);
+        logger.warn(`Removed ${filePath}`);
+      }
+    }
+
+    logger.info('Old error reports clean up job completed');
+  } catch (err) {
+    logger.error(`Error while executing error reports clean up: ${err.message}`);
+  }
+};
+
+// Schedule the job to run daily
+const job = cron.schedule('0 0 * * *', () => {
+  _cleanUpErrorReportData();
+});
+
+logger.info('Initializing error report remove cron job');
+job.start();
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: errorReportsDir,
-    filename: (_req, file, callback) => {
+    filename: (req, file, callback) => {
       try {
-        let ext = path.extname(file.originalname);
+        const { username } = req.body;
+        const ext = path.extname(file.originalname);
         let fileName = Date.now() + ext;
+
+        if (username) {
+          fileName = `${username}_${fileName}`;
+        }
 
         callback(null, fileName);
       } catch (err) {

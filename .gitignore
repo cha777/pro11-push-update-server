@@ -5,4 +5,5 @@ assets/*
 logs/*
 backups/*
 uploads/*
+error-reports/*
 .env
