@@ -55,7 +55,10 @@ const Uploader = () => {
         url: '/createRelease',
         baseURL: baseUrl,
         data: formData,
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Basic ${import.meta.env.AUTH_TOKEN}`,
+        },
         responseType: 'json',
         onUploadProgress: ({ loaded, total }) => {
           setUploadProgress(total ? Math.round((100 * loaded) / total) : 0);

@@ -80,6 +80,18 @@ const Login = () => {
             </div>
           </Form>
         </Card.Body>
+        <Card.Footer className='text-center'>
+          <small>
+            Please use{' '}
+            <a
+              href='https://id.atlassian.com/manage-profile/security/api-tokens'
+              target='_blank'
+            >
+              JIRA Cloud API Token
+            </a>{' '}
+            as the login password
+          </small>
+        </Card.Footer>
       </Card>
     </Container>
   );

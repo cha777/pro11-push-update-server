@@ -66,12 +66,10 @@ router.get('/', async (req, res, next) => {
 
 router.post('/createRelease', async (req, res) => {
   try {
-    const jiraSessionKey = 'JSESSIONID';
-    const jiraSession = req.cookies[jiraSessionKey];
+    const authToken = req.headers.authorization;
 
-    if (jiraSession) {
-      const session = { name: jiraSessionKey, value: jiraSession };
-      const user = await _verifyUser(session);
+    if (authToken) {
+      const user = await _verifyUser(authToken);
 
       if (user) {
         logger.debug(`Release creation - ${user.name}`);
@@ -112,36 +110,30 @@ router.post('/createRelease', async (req, res) => {
 });
 
 router.post('/auth', async (req, res) => {
-  const { username, password } = req.body;
+  const authToken = req.headers.authorization;
 
   try {
-    if (username && password) {
-      const session = await _loginUser(username, password);
-      const user = await _verifyUser(session);
-      const project = await _fetchProjectMeta(session);
+    if (authToken) {
+      const user = await _verifyUser(authToken);
+      const project = await _fetchProjectMeta(authToken);
 
-      res
-        .cookie(session.name, session.value)
-        .status(200)
-        .send({ ...user, ...project });
+      res.status(200).send({ ...user, ...project });
     } else {
       res.status(401).send({ error: 'Invalid credentials' });
     }
   } catch (e) {
-    logger.error('Error while handling auth request', e.message);
+    logger.error('Error while handling auth request:', e.message);
     res.status(500).send({ error: 'Authentication failed' });
   }
 });
 
 router.get('/me', async (req, res) => {
   try {
-    const jiraSessionKey = 'JSESSIONID';
-    const jiraSession = req.cookies[jiraSessionKey];
+    const authToken = req.headers.authorization;
 
-    if (jiraSession) {
-      const session = { name: jiraSessionKey, value: jiraSession };
-      const user = await _verifyUser(session);
-      const project = await _fetchProjectMeta(session);
+    if (authToken) {
+      const user = await _verifyUser(authToken);
+      const project = await _fetchProjectMeta(authToken);
 
       res.status(200).send({ ...user, ...project });
     } else {
@@ -155,55 +147,37 @@ router.get('/me', async (req, res) => {
 
 router.use('/', express.static(clientDir));
 
-const _loginUser = async (username, password) => {
-  return (
-    await axios({
-      url: '/session',
-      baseURL: process.env.API_AUTH,
-      method: 'post',
-      responseType: 'json',
-      data: {
-        username,
-        password,
-      },
-      validateStatus: function (status) {
-        return status >= 200 && status <= 303;
-      },
-    })
-  ).data.session;
-};
-
-const _verifyUser = async (session) => {
+const _verifyUser = async (authToken) => {
   const user = (
     await axios({
       url: '/myself',
       baseURL: process.env.API_REST,
       method: 'get',
+      headers: {
+        Authorization: authToken,
+      },
       responseType: 'json',
       validateStatus: function (status) {
         return status >= 200 && status <= 303;
       },
-      headers: {
-        Cookie: `${session.name}=${session.value};`,
-      },
     })
   ).data;
 
-  if (!allowedUsers.includes(user.name)) {
-    logger.warn(`User not allowed: ${user.email}`);
+  if (!allowedUsers.includes(user.emailAddress)) {
+    logger.warn(`User not allowed: ${user.emailAddress}`);
     return;
   }
 
-  logger.info(`User verified. username: ${user.name}, displayName: ${user.displayName}`);
+  logger.info(`User verified. username: ${user.emailAddress}, displayName: ${user.displayName}`);
 
   return {
-    username: user.name,
+    username: user.emailAddress,
     displayName: user.displayName,
     avatarUrl: user.avatarUrls['16x16'],
   };
 };
 
-const _fetchProjectMeta = async (session) => {
+const _fetchProjectMeta = async (authToken) => {
   logger.info(`Fetching projects for ${process.env.PROJECT_NAME}`);
 
   const { name: projectName, versions } = (
@@ -211,12 +185,12 @@ const _fetchProjectMeta = async (session) => {
       url: `project/${process.env.PROJECT_NAME}`,
       baseURL: process.env.API_REST,
       method: 'get',
+      headers: {
+        Authorization: authToken,
+      },
       responseType: 'json',
       validateStatus: function (status) {
         return status >= 200 && status <= 303;
-      },
-      headers: {
-        Cookie: `${session.name}=${session.value};`,
       },
     })
   ).data;
