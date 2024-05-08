@@ -1,3 +1,5 @@
+require('./global-error-handler');
+
 const path = require('path');
 const logger = require('./logger').default;
 
