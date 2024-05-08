@@ -3,6 +3,8 @@ import { createContext, useCallback, useEffect, useReducer } from 'react';
 import axios from 'axios';
 import { User } from '../types/user';
 
+const STORAGE_KEY = 'jira-token';
+
 interface State {
   isInitialized: boolean;
   isAuthenticated: boolean;
@@ -98,27 +100,34 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
 
   const initialize = useCallback(async (): Promise<void> => {
     try {
-      const user = (
-        await axios({
-          url: '/me',
-          baseURL: baseUrl,
-          method: 'get',
-          responseType: 'json',
-          withCredentials: true,
-          validateStatus: function (status) {
-            return status >= 200 && status <= 303;
-          },
-        })
-      ).data as User;
+      const authToken = window.sessionStorage.getItem(STORAGE_KEY);
 
-      if (user) {
-        return dispatch({
-          type: ActionType.INITIALIZE,
-          payload: {
-            isAuthenticated: true,
-            user,
-          },
-        });
+      if (authToken) {
+        const user = (
+          await axios({
+            url: '/me',
+            baseURL: baseUrl,
+            method: 'get',
+            headers: {
+              Authorization: `Basic ${authToken}`,
+            },
+            responseType: 'json',
+            withCredentials: true,
+            validateStatus: function (status) {
+              return status >= 200 && status <= 303;
+            },
+          })
+        ).data as User;
+
+        if (user) {
+          return dispatch({
+            type: ActionType.INITIALIZE,
+            payload: {
+              isAuthenticated: true,
+              user,
+            },
+          });
+        }
       }
 
       dispatch({
@@ -149,22 +158,25 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
 
   const signIn = useCallback(
     async (username: string, password: string): Promise<void> => {
+      const authToken = btoa(`${username}:${password}`);
+
       const user = (
         await axios({
           url: '/auth',
           baseURL: baseUrl,
           method: 'post',
+          headers: {
+            Authorization: `Basic ${authToken}`,
+          },
           responseType: 'json',
           withCredentials: true,
-          data: {
-            username,
-            password,
-          },
           validateStatus: function (status) {
             return status >= 200 && status <= 303;
           },
         })
       ).data as User;
+
+      sessionStorage.setItem(STORAGE_KEY, authToken);
 
       dispatch({
         type: ActionType.SIGN_IN,
@@ -177,6 +189,7 @@ export const AuthProvider: FC<AuthProviderProps> = (props) => {
   );
 
   const signOut = useCallback(async (): Promise<void> => {
+    sessionStorage.removeItem(STORAGE_KEY);
     dispatch({ type: ActionType.SIGN_OUT });
   }, [dispatch]);
 
