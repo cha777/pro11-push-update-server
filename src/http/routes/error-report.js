@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { subMonths } = require('date-fns');
 const cron = require('node-cron');
+const nodemailer = require('nodemailer');
 const fs = require('fs').promises;
 const path = require('path');
 const { errorReportsDir } = require('../directories');
@@ -10,7 +11,7 @@ const logger = require('../../logger').default;
 
 const router = express.Router();
 
-const fileSize = process.env.REPORT_FILE_SIZE || 100 * 1024 * 1024; // 100mb
+const fileSize = process.env.REPORT_FILE_SIZE ? parseInt(process.env.REPORT_FILE_SIZE, 10) : 30 * 1024 * 1024; // 100mb
 
 const _cleanUpErrorReportData = async () => {
   try {
@@ -43,6 +44,37 @@ const job = cron.schedule('0 0 * * *', () => {
 
 logger.info('Initializing error report remove cron job');
 job.start();
+
+const emailTransporter = nodemailer.createTransport({
+  host: process.env.REPORT_EMAIL_HOST,
+  port: parseInt(process.env.REPORT_EMAIL_PORT, 10),
+  secure: false,
+  auth: {
+    user: process.env.REPORT_EMAIL_USER,
+    pass: process.env.REPORT_EMAIL_PASSWORD,
+  },
+});
+
+const sendReportSubmitNotification = async (req, file) => {
+  try {
+    await emailTransporter.sendMail({
+      from: process.env.REPORT_EMAIL_FROM,
+      to: process.env.REPORT_EMAIL_TO,
+      subject: process.env.REPORT_EMAIL_SUBJECT,
+      text: `
+Dear Support Team,
+
+An error report has been filed to the server.
+
+User: ${req.body.username}
+Attachment: ${file.filename}
+
+`,
+    });
+  } catch (err) {
+    logger.error('Error while sending error report submit notification email');
+  }
+};
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -99,6 +131,7 @@ router.post('/submit', (req, res) => {
       }
 
       logger.info(`Successfully uploaded error report: ${file.filename}`);
+      await sendReportSubmitNotification(req, file);
       res.status(200).send(file);
     });
   } catch (err) {

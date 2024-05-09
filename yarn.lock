@@ -1432,6 +1432,11 @@
   dependencies:
     "whatwg-url" "^5.0.0"
 
+"nodemailer@^6.9.13":
+  "integrity" "sha512-7o38Yogx6krdoBf3jCAqnIN4oSQFx+fMa0I7dK1D+me9kBxx12D+/33wSb+fhOCtIxvYJ+4x4IMEhmhCKfAiOA=="
+  "resolved" "https://registry.npmjs.org/nodemailer/-/nodemailer-6.9.13.tgz"
+  "version" "6.9.13"
+
 "nodemon@^3.0.1":
   "integrity" "sha512-g9AZ7HmkhQkqXkRc20w+ZfQ73cHLbE8hnPbtaFbFtCumZsjyMhKk9LajQ07U5Ux28lvFjZ5X7HvWR1xzU8jHVw=="
   "resolved" "https://registry.npmjs.org/nodemon/-/nodemon-3.0.1.tgz"
