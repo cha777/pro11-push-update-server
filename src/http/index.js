@@ -8,6 +8,7 @@ const errorReport = require('./routes/error-report');
 
 const logger = require('../logger').default;
 const { assetsDir } = require('./directories');
+const { toBoolean } = require('./utils');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,8 +33,14 @@ app.get('/', (_req, res) => {
 });
 
 app.use('/', releaseInfo);
-app.use('/release-uploader', releaseUploader);
-app.use('/error-report', errorReport);
+
+if (toBoolean(process.env.IS_RELEASE_UPLOADER_ENABLED)) {
+  app.use('/release-uploader', releaseUploader);
+}
+
+if (toBoolean(process.env.IS_ERROR_REPORT_ENABLED)) {
+  app.use('/error-report', errorReport);
+}
 
 /* Using public as asset folder */
 app.use(express.static(assetsDir));
