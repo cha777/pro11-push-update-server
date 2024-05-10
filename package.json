@@ -1,6 +1,6 @@
 {
   "name": "pro11-push-update-server",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Pro11 push update service",
   "main": "src/index.js",
   "author": "cha777 (chathuranga_wm@yahoo.com)",
