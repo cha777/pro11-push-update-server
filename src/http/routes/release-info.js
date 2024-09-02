@@ -17,8 +17,8 @@ router.get('/latestVersion', async (_req, res) => {
       logger.warn(msg);
       res.status(404).send(msg);
     }
-  } catch (e) {
-    logger.error(`Error while fetching latest version: ${e.message}`);
+  } catch (err) {
+    logger.error(`Error while fetching latest version: ${err}`);
     res.status(500);
   }
 });
@@ -34,8 +34,8 @@ router.get('/prevReleases', async (_req, res) => {
       logger.warn(msg);
       res.status(404).send(msg);
     }
-  } catch (e) {
-    logger.error(`Error while fetching prev releases version: ${e.message}`);
+  } catch (err) {
+    logger.error(`Error while fetching prev releases version: ${err}`);
     res.status(500);
   }
 });

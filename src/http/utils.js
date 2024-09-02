@@ -56,7 +56,7 @@ module.exports = (function () {
 
         resolve();
       } catch (err) {
-        logger.error('Error while deploying new release', err);
+        logger.error(`Error while deploying new release: ${err}`);
         reject(err);
       } finally {
         if (backupDir && fs.existsSync(backupDir)) {

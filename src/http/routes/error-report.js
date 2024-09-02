@@ -33,7 +33,7 @@ const _cleanUpErrorReportData = async () => {
 
     logger.info('Old error reports clean up job completed');
   } catch (err) {
-    logger.error(`Error while executing error reports clean up: ${err.message}`);
+    logger.error(`Error while executing error reports clean up: ${err}`);
   }
 };
 
@@ -67,12 +67,13 @@ Dear Support Team,
 An error report has been filed to the server.
 
 User: ${req.body.username}
+App Version: ${req.body.appVersion}
 Attachment: ${file.filename}
 
 `,
     });
   } catch (err) {
-    logger.error('Error while sending error report submit notification email');
+    logger.error(`Error while sending error report submit notification email: ${err}`);
   }
 };
 
@@ -91,7 +92,7 @@ const upload = multer({
 
         callback(null, fileName);
       } catch (err) {
-        logger.error(`Error while generating error report file name: ${err.message}`);
+        logger.error(`Error while generating error report file name: ${err}`);
         callback(err);
       }
     },
@@ -107,7 +108,7 @@ const upload = multer({
 
       callback(null, true);
     } catch (err) {
-      logger.error(`Error while filtering upload file type: ${err.message}`);
+      logger.error(`Error while filtering upload file type: ${err}`);
       callback(new Error('Cannot accept this file'));
     }
   },
@@ -117,7 +118,7 @@ router.post('/submit', (req, res) => {
   try {
     upload.single('filename')(req, res, async (err) => {
       if (err) {
-        logger.error(`Error while saving error report file: ${err.message}`);
+        logger.error(`Error while saving error report file: ${err}`);
         res.status(400).send({ error: 'Bad Request' });
         return;
       }
@@ -135,7 +136,7 @@ router.post('/submit', (req, res) => {
       res.status(200).send(file);
     });
   } catch (err) {
-    logger.error(`Error while processing error report file: ${err.message}`);
+    logger.error(`Error while processing error report file: ${err}`);
     res.status(500).send({ error: 'Error while submitting error report' });
   }
 });
@@ -148,14 +149,14 @@ router.get('/:fileName', (req, res) => {
 
     res.sendFile(fileName, { root: errorReportsDir }, (err) => {
       if (err) {
-        logger.error(`Sending error report file ${fileName} failed ${err.message}`);
+        logger.error(`Sending error report file ${fileName} failed ${err}`);
         return;
       }
 
       logger.info(`Successfully sent error report file ${fileName}`);
     });
   } catch (err) {
-    logger.error(`Error sending error report file: ${err.message}`);
+    logger.error(`Error sending error report file: ${err}`);
     res.status(500).send({ error: 'Error downloading error report' });
   }
 });
