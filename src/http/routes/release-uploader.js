@@ -12,7 +12,7 @@ const router = express.Router();
 
 const upload = multer({
   dest: 'uploads/',
-  limits: { files: 1, fields: 1, fileSize: 60 * 1024 * 1024 },
+  limits: { files: 1, fields: 1, fileSize: 150 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     try {
       if (file.mimetype !== 'application/zip' && file.mimetype !== 'application/x-zip-compressed') {
@@ -72,10 +72,11 @@ router.post('/createRelease', async (req, res) => {
       const user = await _verifyUser(authToken);
 
       if (user) {
-        logger.debug(`Release creation - ${user.name}`);
+        logger.debug(`Release creation - ${user.displayName}`);
 
         upload.single('release')(req, res, async (err) => {
           if (err) {
+            logger.error(`Error while uploading release bundle: ${err}`);
             res.status(400).send({ error: 'Bad Request' });
             return;
           }
@@ -121,8 +122,8 @@ router.post('/auth', async (req, res) => {
     } else {
       res.status(401).send({ error: 'Invalid credentials' });
     }
-  } catch (e) {
-    logger.error('Error while handling auth request:', e.message);
+  } catch (err) {
+    logger.error('Error while handling auth request:', err);
     res.status(500).send({ error: 'Authentication failed' });
   }
 });
@@ -139,8 +140,8 @@ router.get('/me', async (req, res) => {
     } else {
       res.status(401).send();
     }
-  } catch (e) {
-    logger.error('Error while handling verify request', e.message);
+  } catch (err) {
+    logger.error('Error while handling verify request', err);
     res.status(500).send();
   }
 });

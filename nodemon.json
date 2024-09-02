@@ -1,6 +1,6 @@
 {
   "restartable": "rs",
-  "ignore": [".git", "node_modules/**/node_modules", "assets"],
+  "ignore": [".git", "node_modules/**/node_modules", "assets", "backups", "error-reports", "uploads"],
   "verbose": true,
   "watch": ["src/"],
   "env": {

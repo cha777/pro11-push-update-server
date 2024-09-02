@@ -11,6 +11,10 @@ module.exports = (function () {
     return process.env.ALLOWED_USERS ? process.env.ALLOWED_USERS.split(',') : [];
   })();
 
+  const toBoolean = (str) => {
+    return !!(str?.toLowerCase?.() === 'true' || str === true || Number.parseInt(str, 10) === 0);
+  };
+
   const getVersionInfo = async () => {
     try {
       const data = await fs.promises.readFile(versionInfoFile);
@@ -52,7 +56,7 @@ module.exports = (function () {
 
         resolve();
       } catch (err) {
-        logger.error('Error while deploying new release', err);
+        logger.error(`Error while deploying new release: ${err}`);
         reject(err);
       } finally {
         if (backupDir && fs.existsSync(backupDir)) {
@@ -230,6 +234,7 @@ module.exports = (function () {
 
   return {
     allowedUsers,
+    toBoolean,
     getVersionInfo,
     getPrevReleasesInfo,
     deployNewRelease,
