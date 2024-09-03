@@ -8,6 +8,8 @@ const logger = require('../logger').default;
 const { assetsDir } = require('./directories');
 const { toBoolean } = require('./utils');
 
+const packageJson = require('../../package.json');
+
 const app = express();
 const server = http.createServer(app);
 
@@ -27,7 +29,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.get('/', (_req, res) => {
-  res.status(200).send('File server is working');
+  res.status(200).send(`
+    File server is working.
+    </br>
+    Version: ${packageJson.version}
+  `);
 });
 
 app.use('/', releaseInfo);
