@@ -1,10 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const AdmZip = require('adm-zip');
 const { format } = require('date-fns');
 
-const logger = require('../logger').default;
 const { versionInfoFile, prevReleasesFile, assetsDir, serverUploadsDir } = require('./directories');
+const logger = require('../logger').default;
 
 module.exports = (function () {
   const allowedUsers = (() => {
@@ -180,11 +180,12 @@ module.exports = (function () {
           if (path.extname(entry.entryName) === '.zip' && entry.entryName.startsWith(`${version}/${version}_`)) {
             validEntries.push(entry);
           } else {
-            invalidEntries.push(entry);
+            invalidEntries.push(entry.entryName);
           }
         });
 
         if (validEntries.length === 0 || invalidEntries.length > 0) {
+          logger.warn(`Invalid update file entries: ${JSON.parse(invalidEntries)}`);
           reject('Invalid zip file');
           return;
         }

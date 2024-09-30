@@ -1,12 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const axios = require('axios');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 
-const logger = require('../../logger').default;
+const fetchRequest = require('../fetch-request');
 const { clientDir } = require('../directories');
 const { deployNewRelease, allowedUsers } = require('../utils');
+const logger = require('../../logger').default;
 
 const router = express.Router();
 
@@ -151,10 +151,8 @@ router.use('/', express.static(clientDir));
 
 const _verifyUser = async (authToken) => {
   const user = (
-    await axios({
-      url: '/myself',
+    await fetchRequest.get('/myself', {
       baseURL: process.env.API_REST,
-      method: 'get',
       headers: {
         Authorization: authToken,
       },
@@ -183,10 +181,8 @@ const _fetchProjectMeta = async (authToken) => {
   logger.info(`Fetching projects for ${process.env.PROJECT_NAME}`);
 
   const { name: projectName, versions } = (
-    await axios({
-      url: `project/${process.env.PROJECT_NAME}`,
+    await fetchRequest.get(`project/${process.env.PROJECT_NAME}`, {
       baseURL: process.env.API_REST,
-      method: 'get',
       headers: {
         Authorization: authToken,
       },

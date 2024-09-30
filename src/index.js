@@ -1,4 +1,5 @@
-const path = require('path');
+const path = require('node:path');
+
 const logger = require('./logger').default;
 const packageJson = require('../package.json');
 

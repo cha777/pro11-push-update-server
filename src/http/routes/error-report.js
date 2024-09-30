@@ -3,13 +3,13 @@ const multer = require('multer');
 const { subMonths } = require('date-fns');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
-const axios = require('axios');
-const fs = require('fs').promises;
-const path = require('path');
+const fs = require('node:fs').promises;
+const path = require('node:path');
+
 const { errorReportsDir } = require('../directories');
 const { toBoolean } = require('../utils');
-
 const logger = require('../../logger').default;
+const fetchRequest = require('../fetch-request');
 
 const router = express.Router();
 
@@ -118,7 +118,7 @@ const upload = multer({
         }
 
         const isValidUser = (
-          await axios.get(process.env.REPORT_AUTHORIZATION_API, {
+          await fetchRequest.get(process.env.REPORT_AUTHORIZATION_API, {
             params: {
               UID: uid,
               SID: sid,
@@ -169,7 +169,7 @@ router.post('/submit', (req, res) => {
       }
 
       logger.info(`Successfully uploaded error report: ${file.filename}`);
-      await sendReportSubmitNotification(req, file);
+      // await sendReportSubmitNotification(req, file);
       res.status(200).send({ filename: file.filename });
     });
   } catch (err) {
