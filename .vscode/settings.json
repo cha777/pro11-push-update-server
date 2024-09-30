@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["postbuild"],
+  "cSpell.words": ["maxsize", "postbuild", "tailable"],
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,

@@ -1,12 +1,11 @@
+const http = require('node:http');
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const http = require('http');
 
 const releaseInfo = require('./routes/release-info');
-
-const logger = require('../logger').default;
 const { assetsDir } = require('./directories');
 const { toBoolean } = require('./utils');
+const logger = require('../logger').default;
 
 const packageJson = require('../../package.json');
 

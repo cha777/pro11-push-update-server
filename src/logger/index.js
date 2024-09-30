@@ -1,7 +1,4 @@
 const winston = require('winston');
-const { format } = require('date-fns');
-
-require('winston-logrotate');
 
 const utils = require('./utils');
 
@@ -10,62 +7,42 @@ class Logger {
     this._createLogger();
   }
 
-  debug(...message) {
-    this.logger.debug(...message);
-  }
-
-  info(...message) {
-    this.logger.info(...message);
-  }
-
-  warn(...message) {
-    this.logger.warn(this._extend(...message));
-  }
-
-  error(...message) {
-    this.logger.error(this._extend(...message));
-  }
-
   _createLogger() {
-    const rotateTransport = new winston.transports.Rotate({
-      file: utils.currentLogFile,
-      colorize: false,
-      timestamp: () => {
-        return this._getFormattedTimeStamp();
-      },
-      json: false,
-      size: '10m',
-      keep: 5,
-      compress: true,
+    const customFormat = winston.format.printf(({ level, message, timestamp }) => {
+      return [timestamp, `[${level.toUpperCase()}]`, `${message}`].join(' ');
     });
 
-    const logger = new winston.Logger({
-      transports: [rotateTransport],
+    const logger = winston.createLogger({
+      level: 'silly',
+      format: winston.format.combine(winston.format.timestamp(), winston.format.align(), customFormat),
+      transports: [
+        new winston.transports.File({
+          level: 'info',
+          filename: utils.currentLogFile,
+          maxsize: 10 * 1024 * 1024,
+          maxFiles: 5,
+          colorize: false,
+          json: false,
+          tailable: true,
+          zippedArchive: true,
+        }),
+      ],
+      exceptionHandlers: [
+        new winston.transports.File({
+          filename: utils.currentExceptionLogFile,
+        }),
+      ],
     });
-
-    winston.handleExceptions(
-      new winston.transports.File({
-        filename: utils.currentExceptionLogFile,
-      })
-    );
 
     if (process.env.NODE_ENV !== 'production') {
-      logger.add(winston.transports.Console, {
+      logger.add(new winston.transports.Console(), {
         level: 'debug',
       });
     }
 
     this.logger = logger;
   }
-
-  _extend(message) {
-    return message;
-  }
-
-  _getFormattedTimeStamp() {
-    return format(new Date(), 'yyyy-MM-dd HH:mm:ss.SSSxxx');
-  }
 }
 
-const logger = new Logger();
+const { logger } = new Logger();
 exports.default = logger;

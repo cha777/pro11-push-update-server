@@ -1,7 +1,7 @@
 const express = require('express');
 
-const logger = require('../../logger').default;
 const { getVersionInfo, getPrevReleasesInfo } = require('../utils');
+const logger = require('../../logger').default;
 
 const router = express.Router();
 

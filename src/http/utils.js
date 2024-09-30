@@ -1,10 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const AdmZip = require('adm-zip');
 const { format } = require('date-fns');
 
-const logger = require('../logger').default;
 const { versionInfoFile, prevReleasesFile, assetsDir, serverUploadsDir } = require('./directories');
+const logger = require('../logger').default;
 
 module.exports = (function () {
   const allowedUsers = (() => {
@@ -182,7 +182,7 @@ module.exports = (function () {
               validEntries.push(entry);
             }
           } else {
-            invalidEntries.push(entry);
+            invalidEntries.push(entry.entryName);
           }
         });
 
