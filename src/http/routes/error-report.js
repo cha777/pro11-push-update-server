@@ -3,15 +3,18 @@ const multer = require('multer');
 const { subMonths } = require('date-fns');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
 const { errorReportsDir } = require('../directories');
+const { toBoolean } = require('../utils');
 
 const logger = require('../../logger').default;
 
 const router = express.Router();
 
 const fileSize = process.env.REPORT_FILE_SIZE ? parseInt(process.env.REPORT_FILE_SIZE, 10) : 30 * 1024 * 1024; // 100mb
+const isAuthorizationNeeded = toBoolean(process.env.REPORT_AUTHORIZATION_ENABLED);
 
 const _cleanUpErrorReportData = async () => {
   try {
@@ -97,13 +100,42 @@ const upload = multer({
       }
     },
   }),
-  limits: { files: 1, fields: 1, fileSize },
-  fileFilter: (_req, file, callback) => {
+  limits: { files: 1, fields: 6, fileSize },
+  fileFilter: async (_req, file, callback) => {
     try {
       if (file.mimetype !== 'application/zip' && file.mimetype !== 'application/x-zip-compressed') {
         logger.error(`Unacceptable file type: ${file.mimetype}`);
         callback(new Error('Invalid file type'));
         return;
+      }
+
+      if (isAuthorizationNeeded) {
+        const { username, sid, uid, token, appVersion } = _req.body;
+
+        if (!username || !sid || !uid || !token || !appVersion) {
+          callback(new Error('Missing required fields'));
+          return;
+        }
+
+        const isValidUser = (
+          await axios.get(process.env.REPORT_AUTHORIZATION_API, {
+            params: {
+              UID: uid,
+              SID: sid,
+            },
+            headers: {
+              Authorization: token,
+            },
+            validateStatus: (status) => {
+              return status < 500;
+            },
+          })
+        ).data.STAT;
+
+        if (!isValidUser) {
+          callback(new Error('Unauthorized'));
+          return;
+        }
       }
 
       callback(null, true);
@@ -118,8 +150,13 @@ router.post('/submit', (req, res) => {
   try {
     upload.single('filename')(req, res, async (err) => {
       if (err) {
+        if (err.message === 'Unauthorized') {
+          res.status(401).send({ error: err.message });
+        } else {
+          res.status(400).send({ error: 'Bad Request' });
+        }
+
         logger.error(`Error while saving error report file: ${err}`);
-        res.status(400).send({ error: 'Bad Request' });
         return;
       }
 
@@ -133,7 +170,7 @@ router.post('/submit', (req, res) => {
 
       logger.info(`Successfully uploaded error report: ${file.filename}`);
       await sendReportSubmitNotification(req, file);
-      res.status(200).send(file);
+      res.status(200).send({ filename: file.filename });
     });
   } catch (err) {
     logger.error(`Error while processing error report file: ${err}`);

@@ -42,6 +42,21 @@ const upload = multer({
   },
 });
 
+const authorizeUser = async (req, res, next) => {
+  const authToken = req.headers.authorization;
+
+  if (authToken) {
+    const user = await _verifyUser(authToken);
+
+    if (user) {
+      next();
+      return;
+    }
+  }
+
+  res.status(401).send({ error: 'Unauthorized' });
+};
+
 router.get('/', async (req, res, next) => {
   if (req.originalUrl.endsWith('index.html') || req.originalUrl.endsWith('/release-uploader/')) {
     try {
@@ -64,50 +79,36 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/createRelease', async (req, res) => {
-  try {
-    const authToken = req.headers.authorization;
-
-    if (authToken) {
-      const user = await _verifyUser(authToken);
-
-      if (user) {
-        logger.debug(`Release creation - ${user.displayName}`);
-
-        upload.single('release')(req, res, async (err) => {
-          if (err) {
-            logger.error(`Error while uploading release bundle: ${err}`);
-            res.status(400).send({ error: 'Bad Request' });
-            return;
-          }
-
-          const file = req.file;
-          const { versionName } = req.body;
-
-          if (!file) {
-            res.status(500).send({ error: 'File not available' });
-            return;
-          }
-
-          if (!versionName) {
-            res.status(500).send({ error: 'Version name not available' });
-            return;
-          }
-
-          await deployNewRelease(req.file, versionName);
-
-          logger.info(`Successfully deployed version: ${versionName}`);
-          res.status(200).send({ message: `Successfully deployed version ${versionName}` });
-        });
-      } else {
-        res.status(401).send({ error: 'Unauthorized' });
+router.post('/createRelease', authorizeUser, async (req, res) => {
+  upload.single('release')(req, res, async (err) => {
+    try {
+      if (err) {
+        logger.error(`Error while uploading release bundle: ${err}`);
+        res.status(400).send({ error: 'Bad Request' });
+        return;
       }
-    } else {
-      res.status(401).send({ error: 'Unauthorized' });
+
+      const file = req.file;
+      const { versionName } = req.body;
+
+      if (!file) {
+        res.status(500).send({ error: 'File not available' });
+        return;
+      }
+
+      if (!versionName) {
+        res.status(500).send({ error: 'Version name not available' });
+        return;
+      }
+
+      await deployNewRelease(req.file, versionName);
+
+      logger.info(`Successfully deployed version: ${versionName}`);
+      res.status(200).send({ message: `Successfully deployed version ${versionName}` });
+    } catch (err) {
+      res.status(500).send({ error: 'Error while deploying version' });
     }
-  } catch (e) {
-    res.status(500).send({ error: 'Error while deploying version' });
-  }
+  });
 });
 
 router.post('/auth', async (req, res) => {
