@@ -177,8 +177,10 @@ module.exports = (function () {
           invalidEntries = [];
 
         parentZip.getEntries().forEach((entry) => {
-          if (path.extname(entry.entryName) === '.zip' && entry.entryName.startsWith(`${version}/${version}_`)) {
-            validEntries.push(entry);
+          if (entry.entryName.startsWith(`${version}/`)) {
+            if (path.extname(entry.entryName) === '.zip' && entry.entryName.startsWith(`${version}/${version}_`)) {
+              validEntries.push(entry);
+            }
           } else {
             invalidEntries.push(entry);
           }
