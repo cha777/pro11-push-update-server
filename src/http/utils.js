@@ -187,6 +187,7 @@ module.exports = (function () {
         });
 
         if (validEntries.length === 0 || invalidEntries.length > 0) {
+          logger.warn(`Invalid update file entries: ${JSON.stringify(invalidEntries)}`);
           reject('Invalid zip file');
           return;
         }
