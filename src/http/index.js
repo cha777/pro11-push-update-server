@@ -48,5 +48,7 @@ if (toBoolean(process.env.IS_ERROR_REPORT_ENABLED)) {
   app.use('/error-report', errorReport);
 }
 
+app.use('/user-guide', require('./routes/user-guide'));
+
 /* Using public as asset folder */
 app.use(express.static(assetsDir));

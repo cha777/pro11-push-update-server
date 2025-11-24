@@ -45,6 +45,13 @@ module.exports = (function () {
     return errorReportsDir;
   })();
 
+  const userGuideDir = (function () {
+    const userGuideDir = path.resolve('./assets/user-guide');
+    logger.info('userGuideDir', userGuideDir);
+
+    return userGuideDir;
+  })();
+
   return {
     assetsDir,
     versionInfoFile,
@@ -52,5 +59,6 @@ module.exports = (function () {
     serverUploadsDir,
     clientDir,
     errorReportsDir,
+    userGuideDir,
   };
 })();
