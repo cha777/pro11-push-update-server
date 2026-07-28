@@ -5,6 +5,10 @@ const { userGuideDir } = require('../directories');
 
 const router = express.Router();
 
+// Serve static assets (JS, CSS, images, etc.) from the userGuideDir (assets/user-guide)
+// Disable directory redirects to prevent Nginx subpath prefix stripping.
+router.use('/', express.static(userGuideDir, { redirect: false }));
+
 router.get('/*', async (req, res, next) => {
   // If it's a file with extension (like .js, .css, .png), let static middleware handle it
   if (path.extname(req.path)) {

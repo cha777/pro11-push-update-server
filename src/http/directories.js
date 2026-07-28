@@ -45,8 +45,10 @@ module.exports = (function () {
     return errorReportsDir;
   })();
 
+  const userGuideRoutePath = process.env.USER_GUIDE_ROUTE_PATH || 'user-manual';
+
   const userGuideDir = (function () {
-    const userGuideDir = path.resolve('./assets/user-guide');
+    const userGuideDir = path.resolve(`./assets/${userGuideRoutePath}`);
     logger.info('userGuideDir', userGuideDir);
 
     return userGuideDir;
@@ -60,5 +62,6 @@ module.exports = (function () {
     clientDir,
     errorReportsDir,
     userGuideDir,
+    userGuideRoutePath,
   };
 })();

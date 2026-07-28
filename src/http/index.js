@@ -5,7 +5,7 @@ const http = require('http');
 const releaseInfo = require('./routes/release-info');
 
 const logger = require('../logger').default;
-const { assetsDir } = require('./directories');
+const { assetsDir, userGuideRoutePath } = require('./directories');
 const { toBoolean } = require('./utils');
 
 const packageJson = require('../../package.json');
@@ -48,7 +48,7 @@ if (toBoolean(process.env.IS_ERROR_REPORT_ENABLED)) {
   app.use('/error-report', errorReport);
 }
 
-app.use('/user-guide', require('./routes/user-guide'));
+app.use(`/${userGuideRoutePath}`, require('./routes/user-guide'));
 
 /* Using public as asset folder */
 app.use(express.static(assetsDir));
